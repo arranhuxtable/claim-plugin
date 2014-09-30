@@ -97,8 +97,8 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
                 urlEncode(externalUserName));
 
         // flow token of a flow
-        String flowToken = "7170352b7bfbc0d71f6964f15903d986";
-
+        //String flowToken = "7170352b7bfbc0d71f6964f15903d986";
+		String flowToken = "";
         // prepare the HTTP request
         URL url;
         HttpURLConnection connection = null;

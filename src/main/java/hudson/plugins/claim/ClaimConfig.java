@@ -17,6 +17,16 @@ public class ClaimConfig extends GlobalConfiguration {
      * Whether we want to send emails to the assignee when items are claimed/assigned
      */
     private boolean sendEmails;
+	
+    /**
+     * Whether we want to send flowdock messages when a build is unclaimed.
+     */
+	private boolean sendFlowdockPostsOnUnclaim;
+	
+	/**
+     * Whether we want to send flowdock messages when a build is claimed.
+     */
+	private boolean sendFlowdockPostsOnClaim;
 
 
     /**
@@ -31,9 +41,19 @@ public class ClaimConfig extends GlobalConfiguration {
         // To persist global configuration information,
         // set that to properties and call save().
         sendEmails = formData.getBoolean("sendEmails");
+		sendFlowdockPostsOnUnclaim = formData.getBoolean("sendFlowdockPostsOnUnclaim");
+		sendFlowdockPostsOnClaim = formData.getBoolean("sendFlowdockPostsOnClaim");
         save();
         return super.configure(req,formData);
     }
+	
+	public boolean shouldSendFlowdockPostsOnUnclaim() { 
+		return sendFlowdockPostsOnUnclaim;
+	}
+	
+	public boolean shouldSendFlowdockPostsOnClaim() { 
+		return sendFlowdockPostsOnClaim;
+	}
 
     /**
      * This method returns true if the global configuration says we should send mails on build claims

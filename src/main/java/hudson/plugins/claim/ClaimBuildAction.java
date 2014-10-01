@@ -45,20 +45,31 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
     public void claim(String claimedBy, String reason, String assignedBy, boolean sticky) {
         super.claim(claimedBy, reason, assignedBy, sticky);
 		LOGGER.info(claimedBy + " is claiming the build because: " + reason);
-        try {
-            sendFlowdockPost(claimedBy, reason);
-        } catch (Exception e) {
-			StringWriter sw = new StringWriter();
-			e.printStackTrace(new PrintWriter(sw));
-			String exceptionAsString = sw.toString();
-			LOGGER.info("Error when sending the Flowdock notification: " + exceptionAsString);
-        }
+		ClaimConfig config = ClaimConfig.get();
+		if (config != null && config.shouldSendFlowdockPostsOnClaim()) {
+			LOGGER.info("Configuration is set to send flowdock posts upon claiming a build...");
+			try {
+				sendFlowdockPost(claimedBy, assignedBy, reason);
+			} catch (Exception e) {
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				String exceptionAsString = sw.toString();
+				LOGGER.info("Error when sending the Flowdock notification: " + exceptionAsString);
+			}
+		}
+		else {
+			LOGGER.info("Configuration is NOT set to send flowdock posts upon claiming a build...");
+		}
 
     }
 	
     @Override
     public String getUrl() {
     	return owner.getUrl();
+	}
+	
+	public boolean hasBeenAssignedToUser(String claimedBy, String assignedBy) { 
+		return claimedBy == assignedBy;
 	}
 
     /**
@@ -73,7 +84,7 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
      *             If an exception is encountered while calling the flowdock
      *             REST API.
      */
-    private void sendFlowdockPost(String claimedBy, String reason)
+    private void sendFlowdockPost(String claimedBy, String assignedBy, String reason)
             throws Exception {
 		LOGGER.info("Beginning to send flowdock notification....");
         String runNumber = "";
@@ -93,7 +104,13 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
         chatMessage.append("A failing build was just claimed!\r\n");
         chatMessage.append("Job: ").append(jobName).append(".\r\n");
         chatMessage.append("Run: ").append(runNumber).append(".\r\n");
-        chatMessage.append("Claimed by: ").append(claimedBy).append(".\r\n");
+		if (hasBeenAssignedToUser(claimedBy, assignedBy)) {
+			chatMessage.append("Claimed by: ").append(claimedBy).append("(assigned by: " + assignedBy + ")").append(".\r\n");	
+		} 
+		else {
+			chatMessage.append("Claimed by: ").append(claimedBy).append(".\r\n");
+		}
+        
         chatMessage.append("Reason: ").append(reason).append(".\r\n");
         chatMessage.append("Jenkins URL: ").append(jenkinsUrl);
 		LOGGER.info("Chat message we will send is: " + chatMessage.toString());

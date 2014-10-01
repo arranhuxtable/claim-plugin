@@ -55,7 +55,7 @@ public class ClaimEmailer {
     public static void sendEmailIfConfigured (User assignee, String assignedBy, String build, String reason, String URL) throws MessagingException, IOException, InterruptedException {
 
         ClaimConfig config = ClaimConfig.get();
-        if (config.getSendEmails() && mailerLoaded) {
+        if (config != null && config.getSendEmails() && mailerLoaded) {
             MimeMessage msg = createMessage(assignee, assignedBy, build, reason, URL);
             Transport.send(msg);
         }

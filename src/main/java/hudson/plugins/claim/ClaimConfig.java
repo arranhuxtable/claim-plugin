@@ -1,18 +1,21 @@
 package hudson.plugins.claim;
 
 import hudson.Extension;
-import jenkins.model.GlobalConfiguration;
+import jenkins.model.GlobalPluginConfiguration;
 import net.sf.json.JSONObject;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.stapler.StaplerRequest;
 
 @Extension 
-public class ClaimConfig extends GlobalConfiguration {
+public class ClaimConfig extends GlobalPluginConfiguration {
 
     public ClaimConfig() {
         load();
     }
-
+    private static final Logger LOGGER = Logger.getLogger("claim-plugin");
     /**
      * Whether we want to send emails to the assignee when items are claimed/assigned
      */
@@ -47,6 +50,14 @@ public class ClaimConfig extends GlobalConfiguration {
         return super.configure(req,formData);
     }
 	
+	public void setSendFlowdockPostsOnClaim(boolean _sendFlowdockPostsOnClaim) {
+		sendFlowdockPostsOnClaim = _sendFlowdockPostsOnClaim;
+	}
+	
+	public void setSendFlowdockPostsOnUnclaim(boolean _sendFlowdockPostsOnUnclaim) {
+		sendFlowdockPostsOnUnclaim = _sendFlowdockPostsOnUnclaim;
+	}
+	
 	public boolean shouldSendFlowdockPostsOnUnclaim() { 
 		return sendFlowdockPostsOnUnclaim;
 	}
@@ -62,6 +73,14 @@ public class ClaimConfig extends GlobalConfiguration {
     public boolean getSendEmails() {
         return sendEmails;
     }
+	
+	public boolean getSendFlowdockPostsOnClaim() { 
+		return sendFlowdockPostsOnClaim;
+	}
+	
+	public boolean getSendFlowdockPostsOnUnclaim() { 
+		return sendFlowdockPostsOnUnclaim;
+	}
     
     /**
      * Set whether we should send emails
@@ -76,6 +95,6 @@ public class ClaimConfig extends GlobalConfiguration {
      * @return the global claim configuration
      */
     public static ClaimConfig get() {
-        return GlobalConfiguration.all().get(ClaimConfig.class);
+        return GlobalPluginConfiguration.all().get(ClaimConfig.class);
     }
 }

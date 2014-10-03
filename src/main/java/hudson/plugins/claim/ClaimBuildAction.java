@@ -49,7 +49,7 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		if (config != null && config.shouldSendFlowdockPostsOnClaim()) {
 			LOGGER.info("Configuration is set to send flowdock posts upon claiming a build...");
 			try {
-				sendFlowdockPost(claimedBy, assignedBy, reason);
+				sendFlowdockPostForClaim(claimedBy, assignedBy, reason);
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
@@ -63,70 +63,50 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 
     }
 	
+	@Override
+    public void unclaim() {
+		
+        super.unclaim();
+		ClaimConfig config = ClaimConfig.get();
+		if (config != null && config.shouldSendFlowdockPostsOnUnclaim()) {
+			LOGGER.info("Configuration is set to send flowdock posts upon dropping the claim of a build...");
+			try {
+				sendFlowdockPostForUnclaim();
+			} catch (Exception e) {
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				String exceptionAsString = sw.toString();
+				LOGGER.info("Error when sending the Flowdock notification: " + exceptionAsString);
+			}
+		}
+		else {
+			LOGGER.info("Configuration is NOT set to send flowdock posts upon unclaiming a build...");
+		}
+
+    }
+	
     @Override
     public String getUrl() {
     	return owner.getUrl();
 	}
 	
 	public boolean hasBeenAssignedToUser(String claimedBy, String assignedBy) { 
-		return claimedBy == assignedBy;
+		return claimedBy != assignedBy;
 	}
 
-    /**
-     * This method is used to send a HTTP POST request to the flowdock API in
-     * order to add a chat message to a flow when a failing build was claimed.
-     * 
-     * @param claimedBy
-     *            The name of the user that claimed the build
-     * @param reason
-     *            The reason the user specified for claiming the failed build.
-     * @throws Exception
-     *             If an exception is encountered while calling the flowdock
-     *             REST API.
-     */
-    private void sendFlowdockPost(String claimedBy, String assignedBy, String reason)
-            throws Exception {
-		LOGGER.info("Beginning to send flowdock notification....");
-        String runNumber = "";
-        String jobName = "";
-        String jenkinsUrl = "";
-        if (owner != null) {
-            // replace the hash sign so that flowdock does not mistake this for
-            // a tag
-            runNumber = owner.getDisplayName().replace("#", "No. ");
-            jobName = owner.getParent().getDisplayName();
-            jenkinsUrl = owner.getAbsoluteUrl();
-        }
-	
-        // This StringBuffer contains the message that will be sent to the
-        // flowdock chat
-        StringBuffer chatMessage = new StringBuffer();
-        chatMessage.append("A failing build was just claimed!\r\n");
-        chatMessage.append("Job: ").append(jobName).append(".\r\n");
-        chatMessage.append("Run: ").append(runNumber).append(".\r\n");
-		if (hasBeenAssignedToUser(claimedBy, assignedBy)) {
-			chatMessage.append("Claimed by: ").append(claimedBy).append("(assigned by: " + assignedBy + ")").append(".\r\n");	
-		} 
-		else {
-			chatMessage.append("Claimed by: ").append(claimedBy).append(".\r\n");
-		}
-        
-        chatMessage.append("Reason: ").append(reason).append(".\r\n");
-        chatMessage.append("Jenkins URL: ").append(jenkinsUrl);
-		LOGGER.info("Chat message we will send is: " + chatMessage.toString());
+	private void sendFlowdockPostForUnclaim() throws Exception {
+		//TODO: Add in the actual user information etc - check how we can get to this info.
+		sendFlowdockPost("Unclaimed!", "jenkins", "#unclaim");
+	}
 
-        // These are the tags for the chat message
-        String tags = "#claim";
-
-        // The username that will be shown in the chat
-        String externalUserName = "jenkins";
-
+	public void sendFlowdockPost(String message, String username, String tags) throws Exception {
+		LOGGER.info("Chat message we will send is: " + message);
         // The post data for the request containing url-encoded values
         StringBuffer postData = new StringBuffer();
-        postData.append("content=").append(urlEncode(chatMessage.toString()));
+        postData.append("content=").append(urlEncode(message));
         postData.append("&tags=").append(urlEncode(tags));
         postData.append("&external_user_name=").append(
-                urlEncode(externalUserName));
+                urlEncode(username));
 
         // flow token of a flow
         //String flowToken = "7170352b7bfbc0d71f6964f15903d986";
@@ -179,7 +159,55 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
                                 + flowdockUrl);
             }
         }
+		
 		LOGGER.info("Finished POSTing the Flowdock notification to: " + flowToken + " with a response code of: " + connection.getResponseCode());
+	}
+
+    /**
+     * This method is used to send a HTTP POST request to the flowdock API in
+     * order to add a chat message to a flow when a failing build was claimed.
+     * 
+     * @param claimedBy
+     *            The name of the user that claimed the build
+     * @param reason
+     *            The reason the user specified for claiming the failed build.
+     * @throws Exception
+     *             If an exception is encountered while calling the flowdock
+     *             REST API.
+     */
+    private void sendFlowdockPostForClaim(String claimedBy, String assignedBy, String reason)
+            throws Exception {
+		LOGGER.info("Beginning to send flowdock notification....");
+        String runNumber = "";
+        String jobName = "";
+        String jenkinsUrl = "";
+        if (owner != null) {
+            // replace the hash sign so that flowdock does not mistake this for
+            // a tag
+            runNumber = owner.getDisplayName().replace("#", "No. ");
+            jobName = owner.getParent().getDisplayName();
+            jenkinsUrl = owner.getAbsoluteUrl();
+        }
+	
+        // This StringBuffer contains the message that will be sent to the
+        // flowdock chat
+        StringBuffer chatMessage = new StringBuffer();
+        chatMessage.append("A failing build was just claimed!\r\n");
+        chatMessage.append("Job: ").append(jobName).append(".\r\n");
+        chatMessage.append("Run: ").append(runNumber).append(".\r\n");
+		if (hasBeenAssignedToUser(claimedBy, assignedBy)) {
+			chatMessage.append("Claimed by: ").append(claimedBy).append(" (assigned by: " + assignedBy + ")").append(".\r\n");	
+		} 
+		else {
+			chatMessage.append("Claimed by: ").append(claimedBy).append(".\r\n");
+		}
+        
+        chatMessage.append("Reason: ").append(reason).append(".\r\n");
+        chatMessage.append("Jenkins URL: ").append(jenkinsUrl);
+
+		sendFlowdockPost(chatMessage.toString(), "jenkins", "#claim");
+       
+
 
     }
 

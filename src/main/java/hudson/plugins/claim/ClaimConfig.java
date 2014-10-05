@@ -30,6 +30,8 @@ public class ClaimConfig extends GlobalPluginConfiguration {
      * Whether we want to send flowdock messages when a build is claimed.
      */
 	private boolean sendFlowdockPostsOnClaim;
+	
+	private String flowdockApiToken;
 
 
     /**
@@ -46,9 +48,18 @@ public class ClaimConfig extends GlobalPluginConfiguration {
         sendEmails = formData.getBoolean("sendEmails");
 		sendFlowdockPostsOnUnclaim = formData.getBoolean("sendFlowdockPostsOnUnclaim");
 		sendFlowdockPostsOnClaim = formData.getBoolean("sendFlowdockPostsOnClaim");
+		flowdockApiToken = formData.getString("flowdockApiToken");
         save();
         return super.configure(req,formData);
     }
+	
+	public void setflowdockApiToken(String _flowdockApiToken) {
+		flowdockApiToken = _flowdockApiToken;
+	}
+	
+	public String getflowdockApiToken() {
+		return flowdockApiToken;
+	}
 	
 	public void setSendFlowdockPostsOnClaim(boolean _sendFlowdockPostsOnClaim) {
 		sendFlowdockPostsOnClaim = _sendFlowdockPostsOnClaim;

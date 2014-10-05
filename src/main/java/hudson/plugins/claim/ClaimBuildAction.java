@@ -28,6 +28,18 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
     public String getDisplayName() {
         return Messages.ClaimBuildAction_DisplayName();
     }
+	
+	public String getBuildNumber() {
+		return owner.getDisplayName().replace("#", "No. ");
+	}
+	
+	public String getJobName() {
+		return owner.getParent().getDisplayName();
+	}
+	
+	public String getJenkinsUrl() {
+		return owner.getAbsoluteUrl();
+	}
 
     @Override
     public String getNoun() {
@@ -44,7 +56,7 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 	@Override
     public void claim(String claimedBy, String reason, String assignedBy, boolean sticky) {
         super.claim(claimedBy, reason, assignedBy, sticky);
-		LOGGER.info(claimedBy + " is claiming the build because: " + reason);
+		LOGGER.info(claimedBy + " is claiming " + getJobName() + " (build " + getBuildNumber() + ") because: " + reason);
 		ClaimConfig config = ClaimConfig.get();
 		if (config != null && config.shouldSendFlowdockPostsOnClaim()) {
 			LOGGER.info("Configuration is set to send flowdock posts upon claiming a build...");
@@ -65,13 +77,16 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 	
 	@Override
     public void unclaim() {
-		
+		String user = getClaimedBy();
+		String buildNumber = getBuildNumber();
+		String jobName = getJobName();
+		String jenkinsUrl = getJenkinsUrl();
         super.unclaim();
 		ClaimConfig config = ClaimConfig.get();
 		if (config != null && config.shouldSendFlowdockPostsOnUnclaim()) {
 			LOGGER.info("Configuration is set to send flowdock posts upon dropping the claim of a build...");
 			try {
-				sendFlowdockPostForUnclaim();
+				sendFlowdockPostForUnclaim(user, buildNumber, jobName, jenkinsUrl);
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
@@ -94,9 +109,17 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		return claimedBy != assignedBy;
 	}
 
-	private void sendFlowdockPostForUnclaim() throws Exception {
-		//TODO: Add in the actual user information etc - check how we can get to this info.
-		sendFlowdockPost("Unclaimed!", "jenkins", "#unclaim");
+	private void sendFlowdockPostForUnclaim(String claimedBy, String buildNumber, String jobName, String jenkinsUrl) throws Exception {
+		LOGGER.info("Beginning to send flowdock notification for a build unclaim....");
+	
+        StringBuffer chatMessage = new StringBuffer();
+        chatMessage.append("A failing build was just unclaimed!\r\n");
+        chatMessage.append("Job: ").append(jobName).append(".\r\n");
+        chatMessage.append("Build: ").append(buildNumber).append(".\r\n");
+		chatMessage.append("No longer claimed by: ").append(claimedBy).append(".\r\n");
+        chatMessage.append("Job URL: ").append(jenkinsUrl);
+
+		sendFlowdockPost(chatMessage.toString(), "jenkins", "#unclaim");
 	}
 
 	public void sendFlowdockPost(String message, String username, String tags) throws Exception {
@@ -110,7 +133,14 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 
         // flow token of a flow
         //String flowToken = "7170352b7bfbc0d71f6964f15903d986";
-		String flowToken = "ca2285fc66094f5eb123001697841420";
+		ClaimConfig config = ClaimConfig.get();
+		
+		if (config == null || config.getflowdockApiToken() == null || config.getflowdockApiToken().isEmpty()) {
+			throw new Exception("Unable to get the flowdock API token from configuration, please check the configuration.");
+		}
+		
+		//String flowToken = "ca2285fc66094f5eb123001697841420";
+		String flowToken = config.getflowdockApiToken();
         // prepare the HTTP request
         URL url;
 		
@@ -162,39 +192,17 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		
 		LOGGER.info("Finished POSTing the Flowdock notification to: " + flowToken + " with a response code of: " + connection.getResponseCode());
 	}
-
-    /**
-     * This method is used to send a HTTP POST request to the flowdock API in
-     * order to add a chat message to a flow when a failing build was claimed.
-     * 
-     * @param claimedBy
-     *            The name of the user that claimed the build
-     * @param reason
-     *            The reason the user specified for claiming the failed build.
-     * @throws Exception
-     *             If an exception is encountered while calling the flowdock
-     *             REST API.
-     */
+	
     private void sendFlowdockPostForClaim(String claimedBy, String assignedBy, String reason)
             throws Exception {
-		LOGGER.info("Beginning to send flowdock notification....");
-        String runNumber = "";
-        String jobName = "";
-        String jenkinsUrl = "";
-        if (owner != null) {
-            // replace the hash sign so that flowdock does not mistake this for
-            // a tag
-            runNumber = owner.getDisplayName().replace("#", "No. ");
-            jobName = owner.getParent().getDisplayName();
-            jenkinsUrl = owner.getAbsoluteUrl();
-        }
+		LOGGER.info("Beginning to send flowdock notification for a build claim....");
 	
         // This StringBuffer contains the message that will be sent to the
         // flowdock chat
         StringBuffer chatMessage = new StringBuffer();
         chatMessage.append("A failing build was just claimed!\r\n");
-        chatMessage.append("Job: ").append(jobName).append(".\r\n");
-        chatMessage.append("Run: ").append(runNumber).append(".\r\n");
+        chatMessage.append("Job: ").append(getJobName()).append(".\r\n");
+        chatMessage.append("Build: ").append(getBuildNumber()).append(".\r\n");
 		if (hasBeenAssignedToUser(claimedBy, assignedBy)) {
 			chatMessage.append("Claimed by: ").append(claimedBy).append(" (assigned by: " + assignedBy + ")").append(".\r\n");	
 		} 
@@ -203,7 +211,7 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		}
         
         chatMessage.append("Reason: ").append(reason).append(".\r\n");
-        chatMessage.append("Jenkins URL: ").append(jenkinsUrl);
+        chatMessage.append("Job URL: ").append(getJenkinsUrl());
 
 		sendFlowdockPost(chatMessage.toString(), "jenkins", "#claim");
        

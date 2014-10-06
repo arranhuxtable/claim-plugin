@@ -2,15 +2,15 @@
   <f:section title="Claim Plugin Settings">
     <f:entry title="${%SendEmails}" field="sendEmails" help="/plugin/claim/help-sendEmails.html">
       <f:checkbox />
-</f:entry>
+  	</f:entry>
 
-	<f:entry title="${%ShouldSendFlowdockMessagesOnClaim}" field="sendFlowdockPostsOnClaim" help="/plugin/claim/help-sendEmails.html">
+	<f:entry title="${%ShouldSendFlowdockMessagesOnClaim}" field="sendFlowdockPostsOnClaim" help="/plugin/claim/help-claim-flowdock-posts.html">
       <f:checkbox />
     </f:entry>
-	<f:entry title="${%ShouldSendFlowdockMessagesOnUnClaim}" field="sendFlowdockPostsOnUnclaim" help="/plugin/claim/help-sendEmails.html">
+	<f:entry title="${%ShouldSendFlowdockMessagesOnUnClaim}" field="sendFlowdockPostsOnUnclaim" help="/plugin/claim/help-unclaim-flowdock-posts.html">
       <f:checkbox />
     </f:entry>
-	<f:entry title="${%FlowdockToken}" field="flowdockApiToken" help="/plugin/claim/help-sendEmails.html">
+	<f:entry title="${%FlowdockToken}" field="flowdockApiToken" help="/plugin/claim/help-flowdock-api-token.html">
       <f:textbox />
     </f:entry>
   </f:section>

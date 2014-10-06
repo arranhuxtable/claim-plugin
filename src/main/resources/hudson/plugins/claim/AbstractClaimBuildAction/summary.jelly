@@ -1,19 +1,6 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 
-    <script type="text/javascript">
-		var staticCssId = "fudgedCssForReveal";
-		if (!document.getElementById(staticCssId)) {
-			link = document.createElement("link");
-			link.href = '/jenkins/plugin/claim/scripts/reveal/reveal.css'
-			link.type = "text/css";
-			link.rel = "stylesheet";
-			link.media = "screen,print";
-			link.id = staticCssId;
-			document.getElementsByTagName("head")[0].appendChild(link);
-		}
-    </script>
-
     <t:summary icon="${rootUrl}/plugin/claim/icons/claim-48x48.png">
         <j:choose>
             <j:when test="${it.isClaimedByMe()}">

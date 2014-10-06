@@ -35,8 +35,6 @@ THE SOFTWARE.
 			link.id = staticCssId;
 			document.getElementsByTagName("head")[0].appendChild(link);
 		}
-	
-
     </script>
 
   <td>

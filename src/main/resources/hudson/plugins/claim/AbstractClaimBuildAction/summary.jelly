@@ -2,17 +2,16 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 
     <script type="text/javascript">
-        function ShowPopup(hoveritem)
-        {
-            hp = document.getElementById("claimHoverPopup");
-            hp.style.display = "block";
-        }
-
-        function HidePopup()
-        {
-            hp = document.getElementById("claimHoverPopup");
-            hp.style.display = "none";
-        }
+		var staticCssId = "fudgedCssForReveal";
+		if (!document.getElementById(staticCssId)) {
+			link = document.createElement("link");
+			link.href = '/jenkins/plugin/claim/scripts/reveal/reveal.css'
+			link.type = "text/css";
+			link.rel = "stylesheet";
+			link.media = "screen,print";
+			link.id = staticCssId;
+			document.getElementsByTagName("head")[0].appendChild(link);
+		}
     </script>
 
     <t:summary icon="${rootUrl}/plugin/claim/icons/claim-48x48.png">
@@ -37,12 +36,12 @@
                         </j:otherwise>
                      </j:choose>
                     <j:if test="${it.canRelease()}">
-                        <a id="dropClaim" href="claim/unclaim">${%Drop the claim.}</a>
-                        <st:nbsp/><a id="reassign" href="#" onClick="ShowPopup(this); return false;">${%Reassign the claim.}</a>
+                        <a id="dropClaim" href="#">${%Drop the claim.}</a>
+                        <st:nbsp/><a id="reassign" href="#">${%Reassign the claim.}</a>
                     </j:if>
                 </p>
                 <j:if test="${it.hasReason()}">
-                    <p>${%Reason:} ${it.reason}</p>
+                    <p id="reasonWhenClaimedByMe">${%Reason:} ${it.reason}</p>
                 </j:if>
             </j:when>
             <j:when test="${it.claimed}">
@@ -65,26 +64,27 @@
                         </j:otherwise>
                      </j:choose>
                     <j:if test="${it.canRelease()}">
-                        <a id="dropClaim" href="claim/unclaim">${%Drop the claim.}</a>
+                        <a id="dropClaim" href="#">${%Drop the claim.}</a>
                     </j:if>
                     <j:if test="${it.canClaim()}">
-                        <a id="reassign" href="#" onClick="ShowPopup(this); return false;">${%Reassign the claim.}</a>
+                        <a id="reassign" href="#">${%Reassign the claim.}</a>
                     </j:if>
                 </p>
                 <j:if test="${it.hasReason()}">
-                    <p>${%Reason:} ${it.reason}</p>
+                    <p id="reasonOtherwise">${%Reason:} ${it.reason}</p>
                 </j:if>
             </j:when>
             <j:otherwise>
                 ${%not.claimed(it.noun)}
                 <j:if test="${it.canClaim()}">
-                    <a id="claim" href="#" onClick="ShowPopup(this); return false;">${%Claim it.}</a>
+                    <a id="claim" href="#">${%Claim it.}</a>
                 </j:if>
             </j:otherwise>
         </j:choose>
-        <div id="claimHoverPopup" style="display:none; width:500px; z-index:1000; border:1px solid #bbb;">
+        <div id="claimHoverPopup" style="display:none;">
             <j:set var="descriptor" value="${it.descriptor}"/>
             <f:form method="post" action="claim/claim" name="claim">
+			<div id="claimDiv">
                 <f:entry title="${%Assignee}" field="assignee" help="/plugin/claim/help-assignee.html">
                     <f:select />        
                 </f:entry>                
@@ -94,13 +94,68 @@
                 <f:entry title="${%Sticky}" help="/plugin/claim/help-sticky.html"> 
                     <f:checkbox name="sticky" checked="${it.sticky}"/>
                 </f:entry>
-                <f:block>
-                    <div align="right">
-                        <f:submit value="${%Claim}"/>
-                        <input type="button" onClick="HidePopup();" value="${%Cancel}" class="submit-button"/>
-                    </div>
-                </f:block>
+			</div>
             </f:form>
         </div>
     </t:summary>
+	
+	<script type="text/javascript">
+	if (jQuery("#reassign").length) {
+		document.getElementById("reassign").onclick = function() { 
+			jQuery("#claimHoverPopup").dialog({
+				width: 750, 
+				modal: true, 
+				buttons: [
+					{
+						text: 'Claim', 
+						click: function () { 
+							jQuery("form[name='claim']").submit();
+							jQuery("#claimHoverPopup").dialog('close');
+						}
+					},
+					{
+						text: 'Cancel', 
+						click: function () { 
+							jQuery("#claimHoverPopup").dialog('close');
+						} 
+					},
+
+				]
+			});
+			jQuery("div.ui-dialog-titlebar").css({background: '#333', border: '1px solid #333'});
+		};
+	}
+	if (jQuery("#dropClaim").length) {
+		document.getElementById("dropClaim").onclick = function() { 
+			jQuery.get("claim/unclaim", function() { 
+				location.reload();
+			});
+		};
+	}
+	if (jQuery("#claim").length) {
+		document.getElementById("claim").onclick = function() { 
+			jQuery("#claimHoverPopup").dialog({
+				width: 750, 
+				modal: true, 
+				buttons: [
+
+					{
+						text: 'Claim', 
+						click: function () { 
+							jQuery("form[name='claim']").submit();
+							jQuery("#claimHoverPopup").dialog('close');
+						}
+					},
+					{
+						text: 'Cancel', 
+						click: function () { 
+							jQuery("#claimHoverPopup").dialog('close');
+					} },
+				]
+			});
+			jQuery("div.ui-dialog-titlebar").css({background: '#333', border: '1px solid #333'});
+		};
+	}
+	</script>
+	
 </j:jelly>

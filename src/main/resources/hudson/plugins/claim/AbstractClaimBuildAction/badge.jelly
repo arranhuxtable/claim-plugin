@@ -1,15 +1,29 @@
 <j:jelly xmlns:j="jelly:core">
+
+    <script type="text/javascript">
+		var staticCssId = "fudgedCss";
+		if (!document.getElementById(staticCssId)) {
+			link = document.createElement("link");
+			link.href = '/jenkins/plugin/claim/scripts/font-awesome/css/font-awesome.min.css'
+			link.type = "text/css";
+			link.rel = "stylesheet";
+			link.media = "screen,print";
+			link.id = staticCssId;
+			document.getElementsByTagName("head")[0].appendChild(link);
+		}
+    </script>
+	
 		<j:if test="${it.claimed}">
 		<j:choose>
 			<j:when test="${it.reason != null}">
-			<img width="16" height="16"
+			<i
 			  title="${%claimed.reason(it.claimedByName,it.reason)}"
-			  src="${imagesURL}/16x16/lock.gif"/>
+			  class="fa fa-warning"/>
 			 </j:when>
 			 <j:otherwise>
-			<img width="16" height="16"
+			<i
 			  title="${%claimed(it.claimedBy)}"
-			  src="${imagesURL}/16x16/lock.gif"/>
+			  class="fa fa-warning"/>
 			 </j:otherwise>
 		</j:choose>
 		</j:if>

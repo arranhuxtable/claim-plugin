@@ -32,6 +32,8 @@ public class ClaimConfig extends GlobalPluginConfiguration {
 	private boolean sendFlowdockPostsOnClaim;
 	
 	private String flowdockApiToken;
+	
+	private String specialBuildRegex;
 
 
     /**
@@ -49,6 +51,7 @@ public class ClaimConfig extends GlobalPluginConfiguration {
 		sendFlowdockPostsOnUnclaim = formData.getBoolean("sendFlowdockPostsOnUnclaim");
 		sendFlowdockPostsOnClaim = formData.getBoolean("sendFlowdockPostsOnClaim");
 		flowdockApiToken = formData.getString("flowdockApiToken");
+		specialBuildRegex = formData.getString("specialBuildRegex");
         save();
         return super.configure(req,formData);
     }
@@ -59,6 +62,14 @@ public class ClaimConfig extends GlobalPluginConfiguration {
 	
 	public String getflowdockApiToken() {
 		return flowdockApiToken;
+	}
+	
+	public void setspecialBuildRegex(String _specialBuildRegex) {
+		specialBuildRegex = _specialBuildRegex;
+	}
+	
+	public String getspecialBuildRegex() {
+		return specialBuildRegex;
 	}
 	
 	public void setSendFlowdockPostsOnClaim(boolean _sendFlowdockPostsOnClaim) {

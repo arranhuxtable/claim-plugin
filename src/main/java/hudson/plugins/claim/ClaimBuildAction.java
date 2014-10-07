@@ -1,6 +1,7 @@
 package hudson.plugins.claim;
 
 import hudson.model.Run;
+import java.util.regex.*;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -56,12 +57,13 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 	@Override
     public void claim(String claimedBy, String reason, String assignedBy, boolean sticky) {
         super.claim(claimedBy, reason, assignedBy, sticky);
-		LOGGER.info(claimedBy + " is claiming " + getJobName() + " (build " + getBuildNumber() + ") because: " + reason);
+		String jobName = getJobName();
+		LOGGER.info(claimedBy + " is claiming " + jobName + " (build " + getBuildNumber() + ") because: " + reason);
 		ClaimConfig config = ClaimConfig.get();
 		if (config != null && config.shouldSendFlowdockPostsOnClaim()) {
 			LOGGER.info("Configuration is set to send flowdock posts upon claiming a build...");
 			try {
-				sendFlowdockPostForClaim(claimedBy, assignedBy, reason);
+				sendFlowdockPostForClaim(claimedBy, assignedBy, reason, jobName);
 			} catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
@@ -110,6 +112,11 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 	}
 
 	private void sendFlowdockPostForUnclaim(String claimedBy, String buildNumber, String jobName, String jenkinsUrl) throws Exception {
+		
+		if (!isBuildSpecial(jobName)) {
+			return;
+		}
+		
 		LOGGER.info("Beginning to send flowdock notification for a build unclaim....");
 	
         StringBuffer chatMessage = new StringBuffer();
@@ -121,8 +128,42 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 
 		sendFlowdockPost(chatMessage.toString(), "jenkins", "#unclaim");
 	}
+	
+	private boolean isBuildSpecial(String buildName) throws Exception {
+		
+		// get the plugin configuration first
+		ClaimConfig config = ClaimConfig.get();
+		
+		// do we have a regex for special builds?
+		if (config == null || config.getspecialBuildRegex() == null || config.getspecialBuildRegex().isEmpty()) {
+			throw new Exception("Unable to get the special build regular expression from configuration, please check the configuration.");
+		}
+		
+		LOGGER.info("Checking if this build (" + buildName + ") meets the Special Build regex of: " + config.getspecialBuildRegex());
+		Pattern pattern = Pattern.compile(config.getspecialBuildRegex());
+		Matcher matcher = pattern.matcher(buildName);
+		boolean isSpecialBuild = matcher.find();
+		if (isSpecialBuild) {
+			LOGGER.info("This build (" + buildName + ") does meet the Special Build regex");
+		}
+		else {
+			LOGGER.info("This build (" + buildName + ") does not meet the Special Build regex");
+		}
+		
+		return isSpecialBuild;
+	}
 
 	public void sendFlowdockPost(String message, String username, String tags) throws Exception {
+		// get the plugin configuration first
+		ClaimConfig config = ClaimConfig.get();
+		
+		// some safety checks first
+		// do we have a flowdock API token?
+		if (config == null || config.getflowdockApiToken() == null || config.getflowdockApiToken().isEmpty()) {
+			throw new Exception("Unable to get the flowdock API token from configuration, please check the configuration.");
+		}
+	
+		
 		LOGGER.info("Chat message we will send is: " + message);
         // The post data for the request containing url-encoded values
         StringBuffer postData = new StringBuffer();
@@ -133,11 +174,7 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 
         // flow token of a flow
         //String flowToken = "7170352b7bfbc0d71f6964f15903d986";
-		ClaimConfig config = ClaimConfig.get();
-		
-		if (config == null || config.getflowdockApiToken() == null || config.getflowdockApiToken().isEmpty()) {
-			throw new Exception("Unable to get the flowdock API token from configuration, please check the configuration.");
-		}
+
 		
 		//String flowToken = "ca2285fc66094f5eb123001697841420";
 		String flowToken = config.getflowdockApiToken();
@@ -193,15 +230,20 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		LOGGER.info("Finished POSTing the Flowdock notification to: " + flowToken + " with a response code of: " + connection.getResponseCode());
 	}
 	
-    private void sendFlowdockPostForClaim(String claimedBy, String assignedBy, String reason)
+    private void sendFlowdockPostForClaim(String claimedBy, String assignedBy, String reason, String jobName)
             throws Exception {
 		LOGGER.info("Beginning to send flowdock notification for a build claim....");
+		
+		if (!isBuildSpecial(jobName)) {
+			return;
+		}
+		
 	
         // This StringBuffer contains the message that will be sent to the
         // flowdock chat
         StringBuffer chatMessage = new StringBuffer();
         chatMessage.append("A failing build was just claimed!\r\n");
-        chatMessage.append("Job: ").append(getJobName()).append(".\r\n");
+        chatMessage.append("Job: ").append(jobName).append(".\r\n");
         chatMessage.append("Build: ").append(getBuildNumber()).append(".\r\n");
 		if (hasBeenAssignedToUser(claimedBy, assignedBy)) {
 			chatMessage.append("Claimed by: ").append(claimedBy).append(" (assigned by: " + assignedBy + ")").append(".\r\n");	

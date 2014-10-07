@@ -134,15 +134,26 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		// get the plugin configuration first
 		ClaimConfig config = ClaimConfig.get();
 		
-		// do we have a regex for special builds?
-		if (config == null || config.getspecialBuildRegex() == null || config.getspecialBuildRegex().isEmpty()) {
-			throw new Exception("Unable to get the special build regular expression from configuration, please check the configuration.");
+		// do we have some kind of configuration
+		if (config == null) {
+			throw new Exception("Unable to get configuration.");
 		}
+		
+		boolean isSpecialBuild;
+		
+		// do we have a regex for special builds?
+		if (config.getspecialBuildRegex() == null || config.getspecialBuildRegex().isEmpty()) {
+			// we don't. So let's assume no builds are flowdock-able
+			LOGGER.info("It appears we don't have a regex, so no builds will be allowed for Flowdock notifications");
+			isSpecialBuild = false;
+			return isSpecialBuild;
+		}
+		
 		
 		LOGGER.info("Checking if this build (" + buildName + ") meets the Special Build regex of: " + config.getspecialBuildRegex());
 		Pattern pattern = Pattern.compile(config.getspecialBuildRegex());
 		Matcher matcher = pattern.matcher(buildName);
-		boolean isSpecialBuild = matcher.find();
+		isSpecialBuild = matcher.find();
 		if (isSpecialBuild) {
 			LOGGER.info("This build (" + buildName + ") does meet the Special Build regex");
 		}
@@ -198,7 +209,6 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
         connection.setDoOutput(true);
 
         // send the POST request
-		//TODO ADD BACK IN THE DEVELOP ETC CHECK
 		LOGGER.info("POSTing the Flowdock notification to: " + flowToken);
         DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
         wr.writeBytes(postData.toString());

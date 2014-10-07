@@ -2,7 +2,7 @@ package hudson.plugins.claim;
 
 import hudson.model.Run;
 import java.util.regex.*;
-
+import org.apache.commons.lang.StringUtils;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
@@ -245,12 +245,19 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
         chatMessage.append("A failing build was just claimed!\r\n");
         chatMessage.append("Job: ").append(jobName).append(".\r\n");
         chatMessage.append("Build: ").append(getBuildNumber()).append(".\r\n");
+		
 		if (hasBeenAssignedToUser(claimedBy, assignedBy)) {
 			chatMessage.append("Claimed by: ").append(claimedBy).append(" (assigned by: " + assignedBy + ")").append(".\r\n");	
 		} 
 		else {
 			chatMessage.append("Claimed by: ").append(claimedBy).append(".\r\n");
 		}
+		
+		if (StringUtils.isEmpty(reason)) {
+			LOGGER.info("No reason was provided. For UX purposes, the post will use {None Given}, however it is not actually set to that.");
+			reason = "{None Given}";
+		}
+		
         
         chatMessage.append("Reason: ").append(reason).append(".\r\n");
         chatMessage.append("Job URL: ").append(getJenkinsUrl());

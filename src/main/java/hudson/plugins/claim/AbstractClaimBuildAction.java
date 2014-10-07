@@ -72,7 +72,10 @@ public abstract class AbstractClaimBuildAction<T extends Saveable> extends Descr
         }
         String reason = req.getSubmittedForm().getString("reason");
         boolean sticky = req.getSubmittedForm().getBoolean("sticky");
-        if (StringUtils.isEmpty(reason)) reason = null;
+        if (StringUtils.isEmpty(reason)) {
+			reason = null;
+		}
+				
         claim(name, reason, currentUser, sticky);
         try {
             ClaimEmailer.sendEmailIfConfigured(User.get(name, false, Collections.EMPTY_MAP), currentUser, owner.toString(), reason, getUrl());
@@ -157,6 +160,7 @@ public abstract class AbstractClaimBuildAction<T extends Saveable> extends Descr
         this.claimDate = null;
         this.assignedBy = null;
         // we remember the reason to show it if someone reclaims this build.
+		this.reason = null;
     }
 
     public boolean isClaimedByMe() {

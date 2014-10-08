@@ -28,7 +28,7 @@ THE SOFTWARE.
 		var staticCssId = "fudgedCss";
 		if (!document.getElementById(staticCssId)) {
 			link = document.createElement("link");
-			link.href = '/jenkins/plugin/claim/scripts/font-awesome/css/font-awesome.min.css'
+			link.href = '/plugin/claim/scripts/font-awesome/css/font-awesome.min.css'
 			link.type = "text/css";
 			link.rel = "stylesheet";
 			link.media = "screen,print";

@@ -173,23 +173,15 @@ public class ClaimBuildAction extends AbstractClaimBuildAction<Run> {
 		if (config == null || config.getflowdockApiToken() == null || config.getflowdockApiToken().isEmpty()) {
 			throw new Exception("Unable to get the flowdock API token from configuration, please check the configuration.");
 		}
-	
-		
+
 		LOGGER.info("Chat message we will send is: " + message);
-        // The post data for the request containing url-encoded values
+		
         StringBuffer postData = new StringBuffer();
         postData.append("content=").append(urlEncode(message));
         postData.append("&tags=").append(urlEncode(tags));
         postData.append("&external_user_name=").append(
                 urlEncode(username));
-
-        // flow token of a flow
-        //String flowToken = "7170352b7bfbc0d71f6964f15903d986";
-
-		
-		//String flowToken = "ca2285fc66094f5eb123001697841420";
 		String flowToken = config.getflowdockApiToken();
-        // prepare the HTTP request
         URL url;
 		
         HttpURLConnection connection = null;

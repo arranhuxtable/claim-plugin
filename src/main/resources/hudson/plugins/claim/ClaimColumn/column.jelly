@@ -24,19 +24,6 @@ THE SOFTWARE.
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:s="/lib/form">
 
-    <script type="text/javascript">
-		var staticCssId = "fudgedCss";
-		if (!document.getElementById(staticCssId)) {
-			link = document.createElement("link");
-			link.href = '/jenkins/plugin/claim/scripts/font-awesome/css/font-awesome.min.css'
-			link.type = "text/css";
-			link.rel = "stylesheet";
-			link.media = "screen,print";
-			link.id = staticCssId;
-			document.getElementsByTagName("head")[0].appendChild(link);
-		}
-    </script>
-
   <td>
     <j:forEach var="action" items="${it.getAction(job)}">
         <j:choose>

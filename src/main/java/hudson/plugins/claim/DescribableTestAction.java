@@ -49,21 +49,32 @@ public abstract class DescribableTestAction extends TestAction implements Descri
 				items.add(currentUser.getDisplayName(), currentUser.getId());
 			}
 			
-			Collection<User> c = User.getAll();
-			if (c != null && currentUser != null) {
-				if (c.contains(currentUser)) {
-					c.remove(currentUser);
+			Collection<User> users = User.getAll();
+			if (users != null) {
+				if (currentUser != null) {
+					if (users.contains(currentUser)) {
+						users.remove(currentUser);
+					}
 				}
-			}
-			
-			if (c!= null ) {
-				List<User> l = new ArrayList<User>(c);
-				Collections.sort(l, comparator); 
-				for (User u : l) {
+				
+				for (User u : users) {
 					items.add(u.getDisplayName(), u.getId());
 				}
+				
+				// iterate through the array of users before its sorted
+				// to remove those that are "like" each other. This can either starts with or contains.
+				// so that usersSorted = minimal list to sort.
+				// that plus the clearing of the backing collection should help performance.
+				
+				List<User> usersSorted = new ArrayList<User>(users);
+				Collections.sort(usersSorted, comparator); 
+				users = null; // get rid of the backing collection now we have a copy sorted.
+				for (User u : usersSorted) {
+					items.add(u.getDisplayName(), u.getId());
+				}
+				
 			}
-
+			
 			return items;
 
 		}

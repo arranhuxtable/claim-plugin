@@ -1,18 +1,4 @@
-<j:jelly xmlns:j="jelly:core">
-
-    <script type="text/javascript">
-		var staticCssId = "fudgedCss";
-		if (!document.getElementById(staticCssId)) {
-			link = document.createElement("link");
-			link.href = '/jenkins/plugin/claim/scripts/font-awesome/css/font-awesome.min.css'
-			link.type = "text/css";
-			link.rel = "stylesheet";
-			link.media = "screen,print";
-			link.id = staticCssId;
-			document.getElementsByTagName("head")[0].appendChild(link);
-		}
-    </script>
-	
+<j:jelly xmlns:j="jelly:core">	
 		<j:if test="${it.claimed}">
 		<j:choose>
 			<j:when test="${it.reason != null}">

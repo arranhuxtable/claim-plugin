@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 
-    <t:summary icon="${rootUrl}/plugin/claim/icons/claim-48x48.png">
+    <t:summary icon="${rootUrl}/plugin/claim/icons/warning-48x48.png">
         <j:choose>
             <j:when test="${it.isClaimedByMe()}">
                 <p>
@@ -23,8 +23,13 @@
                         </j:otherwise>
                      </j:choose>
                     <j:if test="${it.canRelease()}">
-                        <a id="dropClaim" href="#">${%Drop the claim.}</a>
-                        <st:nbsp/><a id="reassign" href="#">${%Reassign the claim.}</a>
+					<span class="yui-button danger">
+                        <button id="dropClaim" onclick="showDropClaimDialog()">${%Drop the claim.}</button>
+					</span>
+                        <st:nbsp/>
+						<span class="yui-button danger">
+							<button id="reassign" onclick="showClaimDialog()">${%Reassign the claim.}</button>
+						</span>
                     </j:if>
                 </p>
                 <j:if test="${it.hasReason()}">
@@ -51,10 +56,14 @@
                         </j:otherwise>
                      </j:choose>
                     <j:if test="${it.canRelease()}">
-                        <a id="dropClaim" href="#">${%Drop the claim.}</a>
+						<span class="yui-button danger">
+							<button id="dropClaim" onclick="showDropClaimDialog()">${%Drop the claim.}</button>
+						</span>
                     </j:if>
                     <j:if test="${it.canClaim()}">
-                        <a id="reassign" href="#">${%Reassign the claim.}</a>
+						<span class="yui-button danger">
+							<button id="reassign" onclick="showClaimDialog()">${%Reassign the claim.}</button>
+						</span>
                     </j:if>
                 </p>
                 <j:if test="${it.hasReason()}">
@@ -64,7 +73,9 @@
             <j:otherwise>
                 ${%not.claimed(it.noun)}
                 <j:if test="${it.canClaim()}">
-                    <a id="claim" href="#">${%Claim it.}</a>
+						<span class="yui-button danger">
+							<button id="claim" onclick="showClaimDialog()">${%Claim the build.}</button>
+						</span>
                 </j:if>
             </j:otherwise>
         </j:choose>
@@ -84,65 +95,59 @@
 			</div>
             </f:form>
         </div>
+		<div id="dropClaimPopup" style="display:none;">
+			<span id="dropClaim">Are you sure you want to drop the claim of this build?</span>
+		</div>
     </t:summary>
 	
 	<script type="text/javascript">
-	if (jQuery("#reassign").length) {
-		document.getElementById("reassign").onclick = function() { 
-			jQuery("#claimHoverPopup").dialog({
-				width: 750, 
+		function showClaimDialog() {
+		  jQuery("#claimHoverPopup").dialog({
+			width: 800, 
+			modal: true, 
+			buttons: [
+			  {
+				text: 'Claim', 
+				click: function () { 
+				  jQuery("form[name='claim']").submit();
+				  jQuery("#claimHoverPopup").dialog('close');
+				}
+			  },
+			  {
+				text: 'Cancel', 
+				click: function () { 
+				  jQuery("#claimHoverPopup").dialog('close');
+				} 
+			  },
+			]
+				});
+
+			jQuery("div.ui-dialog-titlebar").css({background: '#333', border: '1px solid #333'});
+		}
+
+		function showDropClaimDialog() {
+			jQuery("#dropClaimPopup").dialog({
+				width: 800, 
 				modal: true, 
 				buttons: [
-					{
-						text: 'Claim', 
-						click: function () { 
-							jQuery("form[name='claim']").submit();
-							jQuery("#claimHoverPopup").dialog('close');
-						}
-					},
-					{
-						text: 'Cancel', 
-						click: function () { 
-							jQuery("#claimHoverPopup").dialog('close');
-						} 
-					},
-
+				  {
+					text: 'Drop claim', 
+					click: function () { 
+						jQuery.get("claim/unclaim", function() { 
+							location.reload();
+						});
+					}
+				  },
+				  {
+					text: 'Cancel', 
+					click: function () { 
+					  jQuery("#dropClaimPopup").dialog('close');
+					} 
+				  },
 				]
-			});
+				  });
 			jQuery("div.ui-dialog-titlebar").css({background: '#333', border: '1px solid #333'});
-		};
-	}
-	if (jQuery("#dropClaim").length) {
-		document.getElementById("dropClaim").onclick = function() { 
-			jQuery.get("claim/unclaim", function() { 
-				location.reload();
-			});
-		};
-	}
-	if (jQuery("#claim").length) {
-		document.getElementById("claim").onclick = function() { 
-			jQuery("#claimHoverPopup").dialog({
-				width: 750, 
-				modal: true, 
-				buttons: [
-
-					{
-						text: 'Claim', 
-						click: function () { 
-							jQuery("form[name='claim']").submit();
-							jQuery("#claimHoverPopup").dialog('close');
-						}
-					},
-					{
-						text: 'Cancel', 
-						click: function () { 
-							jQuery("#claimHoverPopup").dialog('close');
-					} },
-				]
-			});
-			jQuery("div.ui-dialog-titlebar").css({background: '#333', border: '1px solid #333'});
-		};
-	}
+		}
 	</script>
 	
 </j:jelly>
